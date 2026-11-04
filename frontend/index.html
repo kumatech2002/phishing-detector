@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PhishShield NG — Nigerian Bank Phishing Detector</title>
+  <meta name="description" content="AI-powered phishing detection system for Nigerian banking domains. Analyse suspicious URLs and protect yourself from bank impersonation attacks." />
+  <meta name="theme-color" content="#0a0e1a" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">🛡️</span>
+      <span class="brand-name">PhishShield<span class="brand-accent">NG</span></span>
+    </div>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#" class="nav-link active" data-view="dashboard" id="nav-dashboard">Dashboard</a></li>
+      <li><a href="#" class="nav-link" data-view="analyzer" id="nav-analyzer">Analyser</a></li>
+      <li><a href="#" class="nav-link" data-view="history" id="nav-history">History</a></li>
+      <li><a href="#" class="nav-link" data-view="about" id="nav-about">About</a></li>
+    </ul>
+    <div class="nav-status" id="nav-status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Connecting…</span>
+    </div>
+  </nav>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main-content">
+
+    <!-- Dashboard View -->
+    <section class="view active" id="view-dashboard">
+      <div class="page-header">
+        <h1 class="page-title">Security Dashboard</h1>
+        <p class="page-subtitle">Real-time overview of phishing detection activity and model performance</p>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card" id="stat-total">
+          <div class="stat-icon">🔍</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-total-value">—</div>
+            <div class="stat-label">Total Scans</div>
+          </div>
+        </div>
+        <div class="stat-card danger" id="stat-phishing">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-phishing-value">—</div>
+            <div class="stat-label">Phishing Detected</div>
+          </div>
+        </div>
+        <div class="stat-card success" id="stat-legit">
+          <div class="stat-icon">✅</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-legit-value">—</div>
+            <div class="stat-label">Legitimate Domains</div>
+          </div>
+        </div>
+        <div class="stat-card warning" id="stat-rate">
+          <div class="stat-icon">📊</div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-rate-value">—</div>
+            <div class="stat-label">Detection Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="glass-card chart-card">
+          <h2 class="card-title">Scan Distribution</h2>
+          <div class="chart-wrap" id="donut-wrap">
+            <canvas id="donut-chart"></canvas>
+          </div>
+          <p class="chart-empty" id="donut-empty">No scan data yet. Analyse a domain to begin.</p>
+        </div>
+        <div class="glass-card chart-card wide">
+          <h2 class="card-title">7-Day Activity</h2>
+          <div class="chart-wrap" id="bar-wrap">
+            <canvas id="bar-chart"></canvas>
+          </div>
+          <p class="chart-empty" id="bar-empty">No recent activity data available.</p>
+        </div>
+      </div>
+
+      <!-- Model Performance -->
+      <div class="glass-card model-card">
+        <h2 class="card-title">Model Performance</h2>
+        <div id="model-loading" class="model-loading">Loading model data…</div>
+        <div id="model-info-content" class="model-info-content hidden">
+          <div class="model-header">
+            <div class="model-badge" id="model-badge">—</div>
+            <div class="model-meta">
+              <span id="model-trained-at">—</span>
+              <span class="meta-sep">|</span>
+              <span id="model-dataset-info">—</span>
+            </div>
+          </div>
+          <div class="metrics-comparison" id="metrics-comparison">
+            <!-- Populated by JS -->
+          </div>
+          <h3 class="card-subtitle">Top Predictive Features</h3>
+          <div class="feature-bars" id="feature-bars"><!-- Populated by JS --></div>
+        </div>
+        <div id="model-error" class="model-error hidden">
+          ⚠️ Model not loaded. <a href="#" class="link" id="train-hint-link">See setup instructions →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analyser View -->
+    <section class="view" id="view-analyzer">
+      <div class="page-header">
+        <h1 class="page-title">Domain Analyser</h1>
+        <p class="page-subtitle">Submit a domain to check for phishing signals against Nigerian bank impersonation patterns</p>
+      </div>
+
+      <div class="analyzer-layout">
+        <!-- Input Panel -->
+        <div class="glass-card analyzer-input-card">
+          <div class="input-group">
+            <label class="input-label" for="domain-input">Enter Domain to Analyse</label>
+            <div class="domain-input-wrap">
+              <span class="input-prefix">🌐</span>
+              <input
+                type="text"
+                id="domain-input"
+                class="domain-input"
+                placeholder="e.g. gtbank-secure-login.com"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="253"
+              />
+              <button class="clear-btn" id="clear-btn" title="Clear">✕</button>
+            </div>
+            <div class="input-hint" id="input-hint">Enter the domain only — no http:// needed</div>
+          </div>
+
+          <button class="analyze-btn" id="analyze-btn" aria-label="Analyse domain">
+            <span class="btn-icon">🔍</span>
+            <span class="btn-text">Analyse Domain</span>
+          </button>
+
+          <!-- Example domains -->
+          <div class="example-section">
+            <div class="example-label">Try an example:</div>
+            <div class="example-chips">
+              <button class="example-chip" data-domain="gtbank.com">gtbank.com</button>
+              <button class="example-chip" data-domain="gtbank-secure-login.com">gtbank-secure-login.com</button>
+              <button class="example-chip" data-domain="accessbank.com.ng">accessbank.com.ng</button>
+              <button class="example-chip" data-domain="access-bank-verify.xyz">access-bank-verify.xyz</button>
+              <button class="example-chip" data-domain="zenithbank.com">zenithbank.com</button>
+              <button class="example-chip" data-domain="zen1thbank-login.top">zen1thbank-login.top</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Panel -->
+        <div class="glass-card result-card" id="result-card">
+          <!-- Idle state -->
+          <div class="result-idle" id="result-idle">
+            <div class="idle-icon">🛡️</div>
+            <div class="idle-title">Ready to Scan</div>
+            <div class="idle-subtitle">Enter a domain on the left and click Analyse</div>
+          </div>
+
+          <!-- Scanning animation -->
+          <div class="result-scanning hidden" id="result-scanning">
+            <div class="scan-animation">
+              <div class="scan-ring ring-1"></div>
+              <div class="scan-ring ring-2"></div>
+              <div class="scan-ring ring-3"></div>
+              <div class="scan-icon">🔍</div>
+            </div>
+            <div class="scanning-text">Analysing domain…</div>
+            <div class="scanning-sub" id="scanning-domain-text"></div>
+          </div>
+
+          <!-- Result -->
+          <div class="result-output hidden" id="result-output">
+            <!-- Verdict banner -->
+            <div class="verdict-banner" id="verdict-banner">
+              <div class="verdict-icon" id="verdict-icon"></div>
+              <div class="verdict-text">
+                <div class="verdict-label" id="verdict-label"></div>
+                <div class="verdict-domain" id="verdict-domain"></div>
+              </div>
+            </div>
+
+            <!-- Confidence meter -->
+            <div class="confidence-section">
+              <div class="confidence-header">
+                <span class="confidence-title">Confidence</span>
+                <span class="confidence-value" id="confidence-value"></span>
+              </div>
+              <div class="confidence-bar-track">
+                <div class="confidence-bar-fill" id="confidence-bar"></div>
+              </div>
+              <div class="confidence-description" id="confidence-description"></div>
+            </div>
+
+            <!-- Risk indicators -->
+            <div class="risk-section" id="risk-section">
+              <h3 class="section-title">Risk Indicators</h3>
+              <div class="risk-list" id="risk-list"></div>
+            </div>
+
+            <!-- Feature breakdown -->
+            <div class="features-section">
+              <h3 class="section-title">Feature Breakdown <span class="toggle-link" id="features-toggle">[show]</span></h3>
+              <div class="features-table-wrap hidden" id="features-table-wrap">
+                <table class="features-table" id="features-table">
+                  <thead><tr><th>Feature</th><th>Value</th></tr></thead>
+                  <tbody id="features-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="disclaimer" id="result-disclaimer"></div>
+          </div>
+
+          <!-- Error state -->
+          <div class="result-error hidden" id="result-error">
+            <div class="error-icon">⚠️</div>
+            <div class="error-message" id="error-message"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History View -->
+    <section class="view" id="view-history">
+      <div class="page-header">
+        <h1 class="page-title">Scan History</h1>
+        <p class="page-subtitle">All previously analysed domains with verdicts and confidence scores</p>
+      </div>
+
+      <div class="glass-card history-card">
+        <div class="history-toolbar">
+          <div class="history-count" id="history-count">Loading…</div>
+          <div class="history-actions">
+            <button class="action-btn" id="export-csv-btn">⬇ Export CSV</button>
+            <button class="action-btn danger" id="refresh-history-btn">↺ Refresh</button>
+          </div>
+        </div>
+
+        <div class="history-table-wrap">
+          <table class="history-table" id="history-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Domain</th>
+                <th>Verdict</th>
+                <th>Confidence</th>
+                <th>Model</th>
+                <th>Scanned At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr><td colspan="7" class="table-loading">Loading history…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+          <button class="page-btn" id="page-prev" disabled>← Prev</button>
+          <span class="page-info" id="page-info">Page 1</span>
+          <button class="page-btn" id="page-next">Next →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- About View -->
+    <section class="view" id="view-about">
+      <div class="page-header">
+        <h1 class="page-title">About PhishShield NG</h1>
+        <p class="page-subtitle">How the detection system works</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="glass-card about-card">
+          <div class="about-icon">🧠</div>
+          <h2 class="about-title">Machine Learning Models</h2>
+          <p>Two classifiers are trained and compared — a <strong>Random Forest</strong> and a <strong>Gradient Boosting</strong> classifier (both from scikit-learn). The best-performing model by ROC-AUC on held-out test data is saved as the active classifier.</p>
+        </div>
+        <div class="glass-card about-card">
+          <div class="about-icon">🔬</div>
+          <h2 class="about-title">Feature Extraction</h2>
+          <p>37 domain-level features are extracted from each domain including structural metrics (length, hyphens, digits), brand similarity scores (Levenshtein distance, Jaro-Winkler), TLD risk scores, and suspicious keyword detection.</p>
+        </div>
+        <div class="glass-card about-card">
+          <div class="about-icon">🏦</div>
+          <h2 class="about-title">Target Banks</h2>
+          <p>The model is trained to detect impersonation of 10 major Nigerian banks: <strong>Access Bank, GTBank, First Bank, UBA, Zenith Bank, Fidelity Bank, Union Bank, Ecobank, Stanbic IBTC,</strong> and <strong>Polaris Bank</strong>.</p>
+        </div>
+        <div class="glass-card about-card">
+          <div class="about-icon">⚠️</div>
+          <h2 class="about-title">Important Disclaimer</h2>
+          <p>This system analyses domains using <em>lexical features only</em> — no network requests are made to the target domain. Predictions are probabilistic and should <strong>never</strong> be treated as a guarantee that a domain is safe or malicious. Always verify through official bank channels.</p>
+        </div>
+        <div class="glass-card about-card">
+          <div class="about-icon">📊</div>
+          <h2 class="about-title">Dataset</h2>
+          <p>The model is trained on a synthetic benchmark dataset of ~5,000 labelled domains generated from 8 realistic phishing attack patterns (typosquatting, homoglyph substitution, subdomain camouflage, hyphenation, TLD swapping, keyword stuffing, random-suffix, and multi-technique combinations).</p>
+        </div>
+        <div class="glass-card about-card">
+          <div class="about-icon">🔒</div>
+          <h2 class="about-title">Security</h2>
+          <p>All analysis is purely lexical — the system never visits or resolves the domain being analysed. API endpoints are rate-limited, all database queries are parameterised, and no credentials or session data are stored.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <span>🛡️ PhishShield NG — SOC Analyst Portfolio Project by <strong>Orkuma</strong></span>
+      <span class="footer-sep">|</span>
+      <span>Built with Python, Flask, scikit-learn & Chart.js</span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/analyzer.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>
