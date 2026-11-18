@@ -3,7 +3,10 @@
  */
 
 // ─── Constants ───────────────────────────────────────────────
-const API_BASE = 'http://127.0.0.1:5001';
+// Use an absolute URL so the frontend works whether served by Flask (port 5001)
+// or by a separate dev server like VS Code Live Server (port 5500).
+// Flask has CORS enabled for all origins so cross-port requests are allowed.
+const API_BASE = 'http://127.0.0.1:5001/api';
 
 
 

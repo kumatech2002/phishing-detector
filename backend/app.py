@@ -123,6 +123,18 @@ def create_app() -> Flask:
         init_db()
         log.info("Database ready.")
 
+    # --- Pre-load ML model at startup so health check reflects real state ---
+    try:
+        from backend.ml.predict import _load_artifacts
+        _load_artifacts()
+        log.info("Model pre-loaded successfully.")
+    except FileNotFoundError:
+        log.warning(
+            "Model file not found — run 'python backend/ml/train.py' to train it first."
+        )
+    except Exception as exc:
+        log.warning("Could not pre-load model: %s", exc)
+
     log.info("Phishing Detector app created (env=%s)", config.FLASK_ENV)
     return app
 
