@@ -1,20 +1,11 @@
-"""
+﻿"""
 app.py — Flask application factory for the Phishing Detector.
-
-Serves both the REST API (/api/*) and the frontend static files.
-Start with:
-    python backend/app.py
-    
-Or with a WSGI server in production:
-    gunicorn -w 4 "backend.app:create_app()"
 """
-
 import os
 import sys
 import logging
 from pathlib import Path
 
-# Allow running as `python backend/app.py` from the phishing-detector/ root
 _BACKEND_DIR = Path(__file__).parent
 _PROJECT_DIR = _BACKEND_DIR.parent
 sys.path.insert(0, str(_PROJECT_DIR))
@@ -28,9 +19,6 @@ from backend.config import config
 from backend.api.routes import api_bp
 from backend.db.database import init_db
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
 _IS_VERCEL = bool(os.environ.get("VERCEL"))
 _LOG_DIR = Path("/tmp/logs") if _IS_VERCEL else config.LOGS_DIR
 _LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -45,15 +33,8 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Frontend static directory
-# ---------------------------------------------------------------------------
 _FRONTEND_DIR = _PROJECT_DIR / "frontend"
 
-
-# ---------------------------------------------------------------------------
-# Application factory
-# ---------------------------------------------------------------------------
 
 def create_app() -> Flask:
     app = Flask(
@@ -62,25 +43,19 @@ def create_app() -> Flask:
         static_url_path="",
     )
 
-    # --- Configuration ---
     app.config["SECRET_KEY"] = config.SECRET_KEY
     app.config["DEBUG"] = not config.is_production
 
-    # --- CORS ---
-    # Restrict to localhost in development; configure via env in production
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    # --- Rate limiting ---
     limiter = Limiter(
         get_remote_address,
         app=app,
         default_limits=[config.RATE_LIMIT],
         storage_uri="memory://",
     )
-    # Apply stricter limit to the analysis endpoint specifically
     limiter.limit(config.RATE_LIMIT)(api_bp)
 
-    # --- Security headers ---
     @app.after_request
     def add_security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -90,21 +65,16 @@ def create_app() -> Flask:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
 
-    # --- Register blueprints ---
     app.register_blueprint(api_bp)
 
-    # --- Serve frontend SPA ---
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
     def serve_frontend(path):
-        # Serve static file if it exists
         target = _FRONTEND_DIR / path
         if path and target.exists() and target.is_file():
             return send_from_directory(str(_FRONTEND_DIR), path)
-        # Fall back to index.html for SPA routing
         return send_from_directory(str(_FRONTEND_DIR), "index.html")
 
-    # --- Error handlers ---
     @app.errorhandler(404)
     def not_found(e):
         return jsonify({"ok": False, "error": "Not found"}), 404
@@ -122,12 +92,10 @@ def create_app() -> Flask:
         log.exception("Unhandled 500 error")
         return jsonify({"ok": False, "error": "Internal server error"}), 500
 
-    # --- Database initialisation ---
     with app.app_context():
         init_db()
         log.info("Database ready.")
 
-    # --- Pre-load ML model at startup so health check reflects real state ---
     try:
         from backend.ml.predict import _load_artifacts
         _load_artifacts()
@@ -143,12 +111,7 @@ def create_app() -> Flask:
     return app
 
 
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     application = create_app()
     log.info("Starting server on http://127.0.0.1:5001")
-    log.info("Frontend: http://127.0.0.1:5001")
-    log.info("API docs: http://127.0.0.1:5001/api/health")
     application.run(host="127.0.0.1", port=5001, debug=not config.is_production)
