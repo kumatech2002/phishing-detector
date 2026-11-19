@@ -9,6 +9,7 @@ Or with a WSGI server in production:
     gunicorn -w 4 "backend.app:create_app()"
 """
 
+import os
 import sys
 import logging
 from pathlib import Path
@@ -30,13 +31,16 @@ from backend.db.database import init_db
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
-config.LOGS_DIR.mkdir(parents=True, exist_ok=True)
+_IS_VERCEL = bool(os.environ.get("VERCEL"))
+_LOG_DIR = Path("/tmp/logs") if _IS_VERCEL else config.LOGS_DIR
+_LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 logging.basicConfig(
     level=getattr(logging, config.LOG_LEVEL, logging.INFO),
     format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler(config.LOGS_DIR / "app.log", encoding="utf-8"),
+        logging.FileHandler(_LOG_DIR / "app.log", encoding="utf-8"),
     ],
 )
 log = logging.getLogger(__name__)
