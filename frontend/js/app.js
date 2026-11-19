@@ -1,8 +1,8 @@
-/**
- * app.js — SPA view router and shared API client for PhishShield NG
+﻿/**
+ * app.js â€” SPA view router and shared API client for PhishShield NG
  */
 
-// ─── Constants ───────────────────────────────────────────────
+// â”€â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Use an absolute URL so the frontend works whether served by Flask (port 5001)
 // or by a separate dev server like VS Code Live Server (port 5500).
 // Flask has CORS enabled for all origins so cross-port requests are allowed.
@@ -10,7 +10,7 @@ const API_BASE = 'http://127.0.0.1:5001/api';
 
 
 
-// ─── View router ─────────────────────────────────────────────
+// â”€â”€â”€ View router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const views = ['dashboard', 'analyzer', 'history', 'about'];
 
 function showView(viewName) {
@@ -33,7 +33,7 @@ document.querySelectorAll('.nav-link[data-view]').forEach(link => {
   });
 });
 
-// ─── API Client ──────────────────────────────────────────────
+// â”€â”€â”€ API Client â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const API = {
   async get(path) {
     const res = await fetch(`${API_BASE}${path}`);
@@ -60,7 +60,7 @@ const API = {
   },
 };
 
-// ─── Health / Status polling ─────────────────────────────────
+// â”€â”€â”€ Health / Status polling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function updateStatus() {
   const dot  = document.getElementById('status-dot');
   const text = document.getElementById('status-text');
@@ -77,11 +77,11 @@ async function updateStatus() {
 updateStatus();
 setInterval(updateStatus, 30_000);
 
-// ─── Utilities ───────────────────────────────────────────────
+// â”€â”€â”€ Utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.API = API;
 
 window.formatDate = function(isoString) {
-  if (!isoString) return '—';
+  if (!isoString) return 'â€”';
   try {
     return new Date(isoString + (isoString.endsWith('Z') ? '' : 'Z'))
       .toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' });
